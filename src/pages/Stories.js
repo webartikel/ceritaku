@@ -2,12 +2,12 @@
 // CeritaKu — Stories List Page
 // ============================================
 
-import { getPublishedStories } from '../firebase/firestore.js';
+import { getPublishedStories, getCategories } from '../firebase/firestore.js';
 import { renderStoryCards } from '../components/StoryCard.js';
 import { renderStoryCardSkeleton } from '../components/Skeleton.js';
 import { observeElements } from '../utils/animations.js';
 import { setTitle, setDescription } from '../utils/seo.js';
-import { debounce, CATEGORIES } from '../utils/helpers.js';
+import { debounce } from '../utils/helpers.js';
 
 let currentCategory = null;
 let currentSearch = '';
@@ -15,6 +15,9 @@ let currentSearch = '';
 export async function renderStories(container) {
   setTitle('Semua Cerita');
   setDescription('Jelajahi cerita-cerita inspiratif dari para penulis CeritaKu.');
+
+  // Load categories dynamically
+  const categoriesList = await getCategories();
 
   // Parse URL params
   const hash = window.location.hash;
@@ -55,8 +58,8 @@ export async function renderStories(container) {
 
           <div class="category-filters reveal" id="category-filters" style="margin-bottom:var(--space-8);">
             <button class="tag ${!currentCategory ? 'active' : ''}" data-category="">Semua</button>
-            ${CATEGORIES.map(cat => `
-              <button class="tag ${currentCategory === cat ? 'active' : ''}" data-category="${cat}">${cat}</button>
+            ${categoriesList.map(cat => `
+              <button class="tag ${currentCategory === cat.name ? 'active' : ''}" data-category="${cat.name}">${cat.name}</button>
             `).join('')}
           </div>
 

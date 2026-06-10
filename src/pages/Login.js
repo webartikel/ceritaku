@@ -98,7 +98,7 @@ export async function renderLogin(container) {
     if (!isFirebaseConfigured()) {
       toast.success('Login berhasil! (Mode Demo)');
       // Simulate auth state
-      window.__demoAuth = true;
+      sessionStorage.setItem('demoAuth', 'true');
       navigate('/admin');
       return;
     }

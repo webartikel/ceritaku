@@ -514,3 +514,95 @@ export async function getDashboardStats() {
     recentStories: stories.slice(0, 5)
   };
 }
+
+// ============================================
+// CATEGORIES CRUD
+// ============================================
+
+/**
+ * Get all categories from Firestore
+ */
+export async function getCategories() {
+  if (!isFirebaseConfigured() || !db) {
+    return CATEGORIES.map((cat, index) => ({ id: `demo-${index}`, name: cat }));
+  }
+
+  try {
+    const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
+    const snapshot = await getDocs(q);
+    
+    // Seed default categories if database collection is empty
+    if (snapshot.empty) {
+      console.log('🌱 Seeding default categories to Firestore...');
+      const seedPromises = CATEGORIES.map(async (catName) => {
+        await addDoc(collection(db, 'categories'), {
+          name: catName,
+          createdAt: serverTimestamp()
+        });
+      });
+      await Promise.all(seedPromises);
+      
+      // Fetch again after seeding
+      const refreshedSnapshot = await getDocs(q);
+      return refreshedSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+    }
+
+    return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return CATEGORIES.map((cat, index) => ({ id: `demo-${index}`, name: cat }));
+  }
+}
+
+/**
+ * Create a new category in Firestore
+ */
+export async function createCategory(name) {
+  if (!isFirebaseConfigured() || !db) {
+    // Demo mode - mock add
+    const exists = CATEGORIES.some(cat => cat.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      throw new Error('Kategori sudah ada');
+    }
+    CATEGORIES.push(name.trim());
+    return `demo-${CATEGORIES.length - 1}`;
+  }
+
+  try {
+    const existing = await getCategories();
+    const exists = existing.some(cat => cat.name.toLowerCase() === name.trim().toLowerCase());
+    if (exists) {
+      throw new Error('Kategori sudah ada');
+    }
+
+    const docRef = await addDoc(collection(db, 'categories'), {
+      name: name.trim(),
+      createdAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating category:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a category from Firestore
+ */
+export async function deleteCategory(id) {
+  if (!isFirebaseConfigured() || !db) {
+    // Demo mode
+    const index = parseInt(id.replace('demo-', ''), 10);
+    if (!isNaN(index)) {
+      CATEGORIES.splice(index, 1);
+    }
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, 'categories', id));
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    throw error;
+  }
+}

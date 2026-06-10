@@ -3,9 +3,9 @@
 // ============================================
 
 import { renderAdminSidebar } from './Dashboard.js';
-import { createStory, updateStory, getStoryById } from '../firebase/firestore.js';
+import { createStory, updateStory, getStoryById, getCategories } from '../firebase/firestore.js';
 import { setTitle } from '../utils/seo.js';
-import { slugify, CATEGORIES, debounce, getExcerpt } from '../utils/helpers.js';
+import { slugify, debounce, getExcerpt } from '../utils/helpers.js';
 import { toast } from '../components/Toast.js';
 import { navigate } from '../utils/router.js';
 
@@ -38,6 +38,8 @@ export async function renderEditor(container, params = {}) {
     }
   }
 
+  const categoriesList = await getCategories();
+
   container.innerHTML = `
     <div class="admin-layout">
       ${renderAdminSidebar('editor')}
@@ -48,7 +50,7 @@ export async function renderEditor(container, params = {}) {
             <div>
               <h1 class="admin-title" style="margin-bottom:0;">${isEditing ? 'Edit Cerita' : 'Buat Cerita Baru'}</h1>
             </div>
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <div class="editor-actions">
               <span class="autosave-status" id="autosave-status">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
                 <span id="autosave-text"></span>
@@ -84,7 +86,7 @@ export async function renderEditor(container, params = {}) {
               <label class="form-label" for="editor-category">Kategori</label>
               <select class="form-input form-select" id="editor-category">
                 <option value="">Pilih Kategori</option>
-                ${CATEGORIES.map(cat => `<option value="${cat}" ${storyData.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                ${categoriesList.map(cat => `<option value="${cat.name}" ${storyData.category === cat.name ? 'selected' : ''}>${cat.name}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -187,7 +189,7 @@ export async function renderEditor(container, params = {}) {
 
   // Save Draft
   document.getElementById('btn-draft').addEventListener('click', () => saveStory('draft'));
-  
+
   // Publish
   document.getElementById('btn-publish').addEventListener('click', () => saveStory('published'));
 
@@ -399,7 +401,7 @@ function startAutosave() {
   clearTimeout(autosaveTimer);
   const statusEl = document.getElementById('autosave-status');
   const textEl = document.getElementById('autosave-text');
-  
+
   if (statusEl && textEl) {
     statusEl.className = 'autosave-status';
     textEl.textContent = '';
@@ -407,7 +409,7 @@ function startAutosave() {
 
   autosaveTimer = setTimeout(async () => {
     if (!isDirty) return;
-    
+
     if (statusEl && textEl) {
       statusEl.className = 'autosave-status saving';
       textEl.textContent = 'Menyimpan...';

@@ -76,7 +76,15 @@ export function renderNavbar() {
         <a href="#/stories" class="navbar-link ${isActive('/stories')}" data-route="/stories">Cerita</a>
         <a href="#/about" class="navbar-link ${isActive('/about')}" data-route="/about">Tentang</a>
         ${isLoggedIn 
-          ? `<a href="#/admin" class="navbar-link ${isActive('/admin')}" data-route="/admin">Dashboard</a>`
+          ? `
+            <div class="mobile-menu-divider"></div>
+            <span class="mobile-menu-section">Admin</span>
+            <a href="#/admin" class="navbar-link ${isActive('/admin')}" data-route="/admin">Dashboard</a>
+            <a href="#/admin/editor" class="navbar-link ${isActive('/admin/editor')}" data-route="/admin/editor">Buat Cerita</a>
+            <a href="#/admin/manage" class="navbar-link ${isActive('/admin/manage')}" data-route="/admin/manage">Kelola Cerita</a>
+            <a href="#/admin/categories" class="navbar-link ${isActive('/admin/categories')}" data-route="/admin/categories">Kelola Kategori</a>
+            <a href="#/admin/settings" class="navbar-link ${isActive('/admin/settings')}" data-route="/admin/settings">Pengaturan</a>
+          `
           : `<a href="#/login" class="navbar-link ${isActive('/login')}" data-route="/login">Login Admin</a>`
         }
       </div>
@@ -107,6 +115,7 @@ export function initNavbar() {
     mobileMenu.querySelectorAll('.navbar-link').forEach(link => {
       link.addEventListener('click', () => {
         mobileMenu.classList.remove('open');
+        mobileToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`;
       });
     });
   }
@@ -133,4 +142,13 @@ export function initNavbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
   }
+}
+
+export function updateNavbar() {
+  const oldNavbar = document.getElementById('navbar');
+  if (!oldNavbar) return;
+
+  const newHTML = renderNavbar();
+  oldNavbar.outerHTML = newHTML;
+  initNavbar();
 }

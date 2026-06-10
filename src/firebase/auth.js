@@ -53,6 +53,7 @@ export async function loginAdmin(email, password) {
  * Logout admin
  */
 export async function logoutAdmin() {
+  sessionStorage.removeItem('demoAuth');
   if (!auth) return;
   try {
     await signOut(auth);
@@ -89,7 +90,7 @@ export function onAuthChange(callback) {
  * Check if user is authenticated
  */
 export function isAuthenticated() {
-  return currentUser !== null;
+  return currentUser !== null || sessionStorage.getItem('demoAuth') === 'true';
 }
 
 /**

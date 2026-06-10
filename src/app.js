@@ -7,7 +7,7 @@ import { initTheme } from './utils/theme.js';
 import { initAnimations } from './utils/animations.js';
 import { initFirebase, isFirebaseConfigured } from './firebase/firebase-config.js';
 import { isAuthenticated, onAuthChange } from './firebase/auth.js';
-import { renderNavbar, initNavbar } from './components/Navbar.js';
+import { renderNavbar, initNavbar, updateNavbar } from './components/Navbar.js';
 import { renderFooter } from './components/Footer.js';
 
 // Import pages
@@ -20,12 +20,13 @@ import { renderDashboard } from './pages/Dashboard.js';
 import { renderEditor } from './pages/Editor.js';
 import { renderManageStories } from './pages/ManageStories.js';
 import { renderSettings } from './pages/Settings.js';
+import { renderManageCategories } from './pages/ManageCategories.js';
 
 // App state
 let appContainer = null;
 
 function isLoggedIn() {
-  return isAuthenticated() || window.__demoAuth === true;
+  return isAuthenticated();
 }
 
 function getPageContainer() {
@@ -121,6 +122,13 @@ async function handleSettings() {
   handleLinkClicks(container);
 }
 
+async function handleManageCategories() {
+  renderLayout('', { showNavbar: true, showFooter: false });
+  const container = getPageContainer();
+  await renderManageCategories(container);
+  handleLinkClicks(container);
+}
+
 function handleNotFound() {
   renderLayout(`
     <div class="empty-state" style="min-height:60vh;">
@@ -159,6 +167,7 @@ function initApp() {
     .addRoute('/admin/editor', handleEditor, { requiresAuth: true })
     .addRoute('/admin/editor/:id', handleEditor, { requiresAuth: true })
     .addRoute('/admin/manage', handleManage, { requiresAuth: true })
+    .addRoute('/admin/categories', handleManageCategories, { requiresAuth: true })
     .addRoute('/admin/settings', handleSettings, { requiresAuth: true })
     .setNotFound(handleNotFound);
 
@@ -174,8 +183,9 @@ function initApp() {
   // Listen for auth state changes
   onAuthChange((user) => {
     // Re-render current route to update navbar
+    updateNavbar();
     const currentPath = router.getHash();
-    if (currentPath.startsWith('/admin') && !user && !window.__demoAuth) {
+    if (currentPath.startsWith('/admin') && !isAuthenticated()) {
       router.navigate('/login');
     }
   });
