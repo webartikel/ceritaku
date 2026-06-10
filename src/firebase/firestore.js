@@ -195,27 +195,20 @@ export async function getPublishedStories({ category = null, search = null, limi
   }
 
   try {
-    let q;
-    if (category) {
-      q = query(
-        collection(db, 'stories'),
-        where('status', '==', 'published'),
-        where('category', '==', category),
-        orderBy('publishedAt', 'desc'),
-        limit(limitCount)
-      );
-    } else {
-      q = query(
-        collection(db, 'stories'),
-        where('status', '==', 'published'),
-        orderBy('publishedAt', 'desc'),
-        limit(limitCount)
-      );
-    }
+    const q = query(
+      collection(db, 'stories'),
+      where('status', '==', 'published')
+    );
 
     const snapshot = await getDocs(q);
     let stories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+    // Filter berdasarkan kategori secara client-side
+    if (category) {
+      stories = stories.filter(s => s.category === category);
+    }
+
+    // Filter berdasarkan kata kunci pencarian secara client-side
     if (search) {
       const searchLower = search.toLowerCase();
       stories = stories.filter(s =>
@@ -225,7 +218,14 @@ export async function getPublishedStories({ category = null, search = null, limi
       );
     }
 
-    return stories;
+    // Urutkan berdasarkan tanggal publikasi terbaru (descending) secara client-side
+    stories.sort((a, b) => {
+      const timeA = a.publishedAt?.seconds || a.createdAt?.seconds || 0;
+      const timeB = b.publishedAt?.seconds || b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+
+    return stories.slice(0, limitCount);
   } catch (error) {
     console.error('Error fetching published stories:', error);
     return [];
@@ -408,14 +408,22 @@ export async function getRelatedStories(category, currentSlug, count = 3) {
   try {
     const q = query(
       collection(db, 'stories'),
-      where('status', '==', 'published'),
-      where('category', '==', category),
-      orderBy('publishedAt', 'desc'),
-      limit(count + 1)
+      where('status', '==', 'published')
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
+    let stories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Filter berdasarkan kategori secara client-side
+    stories = stories.filter(s => s.category === category);
+
+    // Urutkan berdasarkan tanggal publikasi terbaru (descending) secara client-side
+    stories.sort((a, b) => {
+      const timeA = a.publishedAt?.seconds || a.createdAt?.seconds || 0;
+      const timeB = b.publishedAt?.seconds || b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+
+    return stories
       .filter(s => s.slug !== currentSlug)
       .slice(0, count);
   } catch (error) {
