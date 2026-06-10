@@ -49,20 +49,7 @@ export async function renderLanding(container) {
           </a>
         </div>
 
-        <div class="hero-stats animate-fade-up" style="animation-delay: 0.65s;" id="hero-stats">
-          <div>
-            <div class="hero-stat-value" id="stat-stories">—</div>
-            <div class="hero-stat-label">Cerita Terpublikasi</div>
-          </div>
-          <div>
-            <div class="hero-stat-value" id="stat-views">—</div>
-            <div class="hero-stat-label">Total Dibaca</div>
-          </div>
-          <div>
-            <div class="hero-stat-value" id="stat-categories">—</div>
-            <div class="hero-stat-label">Kategori</div>
-          </div>
-        </div>
+
       </div>
     </section>
 
@@ -120,17 +107,7 @@ export async function renderLanding(container) {
         `;
       }
 
-      // Update stats
-      const totalViews = stories.reduce((sum, s) => sum + (s.views || 0), 0);
-      const categories = new Set(stories.map(s => s.category).filter(Boolean));
 
-      const statStories = document.getElementById('stat-stories');
-      const statViews = document.getElementById('stat-views');
-      const statCategories = document.getElementById('stat-categories');
-
-      if (statStories) statStories.textContent = formatNumber(stories.length);
-      if (statViews) statViews.textContent = formatNumber(totalViews);
-      if (statCategories) statCategories.textContent = formatNumber(categories.size || 5);
 
       // Trigger animations
       observeElements();
