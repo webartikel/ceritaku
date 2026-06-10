@@ -7,7 +7,7 @@ import {
   query, where, orderBy, limit, startAfter,
   serverTimestamp, increment, setDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { isFirebaseConfigured } from './firebase-config.js';
 import { CATEGORIES } from '../utils/helpers.js';
 
@@ -241,7 +241,23 @@ export async function getStoryBySlug(slug) {
   }
 
   try {
-    const q = query(collection(db, 'stories'), where('slug', '==', slug), limit(1));
+    let q;
+    // Jika admin sudah login, boleh mencari semua status. Jika publik, hanya boleh mencari yang 'published'.
+    if (auth && auth.currentUser) {
+      q = query(
+        collection(db, 'stories'), 
+        where('slug', '==', slug), 
+        limit(1)
+      );
+    } else {
+      q = query(
+        collection(db, 'stories'),
+        where('status', '==', 'published'),
+        where('slug', '==', slug),
+        limit(1)
+      );
+    }
+
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
     const doc_ = snapshot.docs[0];
