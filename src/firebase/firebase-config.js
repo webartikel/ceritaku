@@ -33,7 +33,12 @@ let auth = null;
 let firebaseReady = false;
 
 export function isFirebaseConfigured() {
-  return false;
+  return !!(
+    firebaseConfig &&
+    firebaseConfig.apiKey &&
+    firebaseConfig.apiKey !== "" &&
+    !firebaseConfig.apiKey.includes("YOUR_")
+  );
 }
 
 export function initFirebase() {
