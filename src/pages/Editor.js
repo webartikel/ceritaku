@@ -296,15 +296,54 @@ function initCoverUpload() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Ukuran file maksimal 2MB');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 5MB');
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setCoverImage(ev.target.result);
-      urlInput.value = '';
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Dimensi maksimal untuk cover image
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 600;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Kompres gambar menjadi JPEG dengan kualitas 70%
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+        // Cek jika ukuran string base64 masih terlalu besar
+        if (compressedBase64.length > 900000) {
+          toast.error('Ukuran gambar terlalu besar setelah kompresi. Silakan gunakan gambar dengan resolusi lebih rendah.');
+          return;
+        }
+
+        setCoverImage(compressedBase64);
+        urlInput.value = '';
+      };
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
