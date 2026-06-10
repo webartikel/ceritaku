@@ -438,7 +438,16 @@ async function saveStory(status, silent = false) {
   const coverPreview = document.getElementById('cover-preview');
   const coverUrl = document.getElementById('cover-url').value.trim();
   const tagsWrapper = document.getElementById('tags-wrapper');
-  const tags = tagsWrapper.getTags ? tagsWrapper.getTags() : [];
+  
+  // Get tags and auto-include any pending tag typed in the input field
+  let tags = tagsWrapper.getTags ? tagsWrapper.getTags() : [];
+  const tagInput = document.getElementById('tag-input');
+  if (tagInput && tagInput.value.trim()) {
+    const pendingTag = tagInput.value.trim().toLowerCase().replace(/,/g, '');
+    if (pendingTag && !tags.includes(pendingTag) && tags.length < 10) {
+      tags.push(pendingTag);
+    }
+  }
 
   if (!title) {
     if (!silent) toast.error('Judul cerita harus diisi');
